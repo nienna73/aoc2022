@@ -204,7 +204,7 @@ void runSimulation(vector<string> values, vector<Tail> *tails) {
                     move(&tails->at(j), direction);
                 }
                 moveTail(&tails->at(j), &tails->at(j+1));
-                updateCoords(&tails->at(j+1));
+                tails->at(j+1) = updateCoordsWithRet(tails->at(j+1));
             }
         }
     }

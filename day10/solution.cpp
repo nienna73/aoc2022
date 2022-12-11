@@ -42,49 +42,34 @@ void drawSprite(vector<int> sprite) {
     cout << endl;
 }
 
-map<int, bool> part2(vector<string> input) {
-    long x = 1;
-    signed toAdd = 0;
-    map<int, bool> values;
-    int numCycles = 0;
+vector<bool> part2(vector<string> values) {
+    int moves = 0;
+    int x = 1;
+    vector<bool> canSee;
     vector<int> sprite;
-    for (int i = 0; i < input.size(); i++) {
-        vector<string> split = splitString(input[i], ' ');
-        x += toAdd;
-        sprite.clear();
-        sprite.push_back(x-1);
-        sprite.push_back(x);
-        sprite.push_back(x+1);
+    sprite.push_back(x);
+    sprite.push_back(x-1);
+    sprite.push_back(x+1);
+
+    for (string &s : values) {
+        vector<string> split = splitString(s, ' ');
         if (split.size() == 1) {
-            toAdd = 0;
-            numCycles += 1;
-            if (find(sprite.begin(), sprite.end(), (numCycles % 40)) != sprite.end()) {
-                values[numCycles] = true;
-            } else {
-                values[numCycles] = false;
-            }
-        } else if (split.size() == 2) {
-            toAdd = stol(split[1]);
-            numCycles += 1;
-            if (find(sprite.begin(), sprite.end(), (numCycles% 40)) != sprite.end()) {
-                values[numCycles] = true;
-            } else {
-                values[numCycles] = false;
-            }
-            numCycles += 1;
-            if (find(sprite.begin(), sprite.end(), (numCycles % 40)) != sprite.end()) {
-                values[numCycles] = true;
-            } else {
-                values[numCycles] = false;
-            }
+            moves += 1;
+            canSee.push_back(find(sprite.begin(), sprite.end(), moves % 40) != sprite.end());
+        } else {
+            moves += 1;
+            canSee.push_back(find(sprite.begin(), sprite.end(), moves % 40) != sprite.end());
+            moves += 1;
+            x += stoi(split[1]);
             sprite.clear();
-            sprite.push_back(x-1);
             sprite.push_back(x);
+            sprite.push_back(x-1);
             sprite.push_back(x+1);
+            canSee.push_back(find(sprite.begin(), sprite.end(), moves % 40) != sprite.end());
         }
     }
 
-    return values;
+    return canSee;
 }
 
 int main() {
@@ -101,7 +86,7 @@ int main() {
     sum += out[219] * 220;
     cout << "Part 1: " << sum << endl;
 
-    map<int, bool> crt = part2(values);
+    vector<bool> crt = part2(values);
     cout << crt.size() << endl;
     for (int i = 0; i < 240; i++) {
         if (i % 40 == 0) {
