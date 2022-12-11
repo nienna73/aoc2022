@@ -47,26 +47,49 @@ vector<SeaCucumber> initializeSeaCucumbers(vector<string> values) {
     return seaCucumbers;
 }
 
-void canMove(vector<vector<bool> > mapOfCukes, SeaCucumber &activeCuke, int height, int width) {
+void canMoveEast(vector<vector<bool> > mapOfCukes, SeaCucumber &activeCuke, int height, int width) {
     int pos_x = activeCuke.x;
     int pos_y = activeCuke.y;
     int next_pos_x;
     int next_pos_y;
     bool cukeCanMove = true;
     if (activeCuke.direction == "south") {
-        // move down, or up in y
-        next_pos_x = pos_x;
-        next_pos_y = pos_y + 1;
-        if (next_pos_y >= height) {
-            next_pos_y = 0;
-        }
-    } else if (activeCuke.direction == "east") {
-        // move right, or up in x
-        next_pos_x = pos_x + 1;
-        if (next_pos_x >= width) {
-            next_pos_x = 0;
-        }
-        next_pos_y = pos_y;
+        return;
+    } 
+    // move right, or up in y
+    next_pos_x = pos_x;
+    next_pos_y = pos_y + 1;
+    if (next_pos_y >= width) {
+        next_pos_y = 0;
+    }
+
+    if (mapOfCukes[next_pos_x][next_pos_y]) {
+        cukeCanMove = false;
+        next_pos_x = -1;
+        next_pos_y = -1;
+    }
+
+    activeCuke.cukeCanMove = cukeCanMove;
+    activeCuke.next_x = next_pos_x;
+    activeCuke.next_y = next_pos_y;
+
+    return;
+}
+
+void canMoveSouth(vector<vector<bool> > mapOfCukes, SeaCucumber &activeCuke, int height, int width) {
+    int pos_x = activeCuke.x;
+    int pos_y = activeCuke.y;
+    int next_pos_x;
+    int next_pos_y;
+    bool cukeCanMove = true;
+    if (activeCuke.direction == "east") {
+        return;
+    }
+    // move down, or up in x
+    next_pos_x = pos_x + 1;
+    next_pos_y = pos_y;
+    if (next_pos_x >= height) {
+        next_pos_x = 0;
     }
 
     if (mapOfCukes[next_pos_x][next_pos_y]) {
@@ -85,9 +108,10 @@ void canMove(vector<vector<bool> > mapOfCukes, SeaCucumber &activeCuke, int heig
 bool move(vector<SeaCucumber> &seaCucumbers, string direction) {
     bool didMove = false;
     int length = seaCucumbers.size();
+    long int doesNotExist = string::npos;
     for (int i = 0; i < length; i++) {
         SeaCucumber cuke = seaCucumbers[i];
-        if (cuke.direction == direction) {
+        if (cuke.direction.find(direction) != doesNotExist) {
             if (cuke.cukeCanMove) {
                 if (cuke.next_x != -1 && cuke.next_y != -1) {
                     cuke.x = cuke.next_x;
@@ -106,8 +130,8 @@ bool move(vector<SeaCucumber> &seaCucumbers, string direction) {
 vector<vector<bool> > initializeMap(vector<SeaCucumber> seaCucumbers, int height, int width) {
     vector<vector<bool> > map;
 
-    vector<bool> temp(width, false);
     for (int i = 0; i < height; i++) {
+        vector<bool> temp(width, false);
         map.push_back(temp);
     }
 
@@ -118,12 +142,31 @@ vector<vector<bool> > initializeMap(vector<SeaCucumber> seaCucumbers, int height
     return map;
 }
 
-void printBoard(vector<vector<bool> > map) {
-    for (vector<bool> &row : map) {
+SeaCucumber getCukeWithCoords(int i, int j, vector<SeaCucumber> seaCucumbers) {
+    for (SeaCucumber &sc : seaCucumbers) {
+        if (sc.x == i && sc.y == j) {
+            return sc;
+        }
+    }
+
+    SeaCucumber doesNotExist;
+    return doesNotExist;
+}
+
+void printBoard(vector<vector<bool> > map, vector<SeaCucumber> seaCucumbers) {
+    for (int j = 0; j < map.size(); j++) {
+        vector<bool> row = map[j];
         int l = row.size();
         for (int i = 0; i < l; i++) {
             bool val = row[i];
-            cout << val;
+            SeaCucumber sc = getCukeWithCoords(j, i, seaCucumbers);
+            if (sc.direction == "south") {
+                cout << "v";
+            } else if (sc.direction == "east") {
+                cout << ">";
+            } else {
+                cout << ".";
+            }
         }
         cout << endl;
     }
@@ -137,17 +180,18 @@ int runSimulation(vector<vector<bool> > map, vector<SeaCucumber> seaCucumbers, i
         moves += 1;
         int length = seaCucumbers.size();
         for (SeaCucumber &cuke: seaCucumbers) {
-            canMove(map, cuke, height, width);
+            canMoveEast(map, cuke, height, width);
+            canMoveSouth(map, cuke, height, width);
         }
         didMoveEast = move(seaCucumbers, "east");
+        map = initializeMap(seaCucumbers, height, width);
+        for (SeaCucumber &cuke: seaCucumbers) {
+            canMoveSouth(map, cuke, height, width);
+        }
         didMoveSouth = move(seaCucumbers, "south");
         map = initializeMap(seaCucumbers, height, width);
-        if (moves % 50 == 0) {
-            printBoard(map);
-            cout << "Made " << moves << " moves" << endl;
-        }
-        if (moves > 1000) {
-            break;
+        if (moves % 100 == 0) {
+            cout << "Simulation has taken " << moves << " moves" << endl;
         }
     }
 
@@ -170,7 +214,6 @@ void test_runSimulation() {
     cout << "Running simulation..." << endl;
 
     int moves = runSimulation(map, seaCucumbers, height, width);
-    cout << moves << endl;
     IS_TRUE((moves == 58));
 }
 
@@ -178,17 +221,21 @@ void test_runSimulation() {
 int main() {
     test_runSimulation();
     // I'm working in quadrant 4: positive x, negative y
-    // vector<string> values = getValuesFromFile("2021-25-input.txt");
+    vector<string> values = getValuesFromFile("2021-25-input.txt");
 
-    // int height = values.size();     // y-axis
-    // int width = values[0].length(); // x-axis
+    int height = values.size();     // y-axis
+    int width = values[0].length(); // x-axis
 
-    // vector<SeaCucumber> seaCucumbers = initializeSeaCucumbers(values);
-    // if (seaCucumbers.size() == 0) {
-    //     return -1;
-    // }
+    vector<SeaCucumber> seaCucumbers = initializeSeaCucumbers(values);
+    vector<vector<bool> > map = initializeMap(seaCucumbers, height, width);
+    if (seaCucumbers.size() == 0) {
+        return -1;
+    }
 
-    // int moves = runSimulation(seaCucumbers, height, width);
+    cout << "Running simulation..." << endl;
+
+    int moves = runSimulation(map, seaCucumbers, height, width);
+    cout << moves << endl;
 
     return 0;
 }
