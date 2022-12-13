@@ -11,33 +11,7 @@ def moveHead(head, direction, distance):
     return head
 
 def isTouching(head, tail):
-    if head == tail:
-        return True
-    if head[1] == tail[1] and head[0] + 1 == tail[0]:
-        return True
-
-    if head[1] == tail[1] and head[0] - 1 == tail[0]:
-        return True
-
-    if head[1] + 1 == tail[1] and head[0] == tail[0]:
-        return True
-
-    if head[1] - 1 == tail[1] and head[0] == tail[0]:
-        return True
-
-    if head[1] + 1 == tail[1] and head[0] + 1 == tail[0]:
-        return True
-
-    if head[1] - 1 == tail[1] and head[0] + 1 == tail[0]:
-        return True
-
-    if head[1] + 1 == tail[1] and head[0] - 1 == tail[0]:
-        return True
-
-    if head[1] - 1 == tail[1] and head[0] - 1 == tail[0]:
-        return True
-
-    return False
+    return (head[0] - tail[0] in [-1, 0, 1]) and (head[1] - tail[1] in [-1,0,1])
 
 def moveTail(head, tail):
     if isTouching(head, tail):

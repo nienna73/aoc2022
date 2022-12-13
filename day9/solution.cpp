@@ -4,61 +4,18 @@
 #include <string>
 #include <iostream>
 
-class Head{
-    public:
-        signed int x, y;
-};
-
 class Tail{
     public:
         signed int x, y;
         vector<string> uniqueCoords;
-
-        void operator=(const Tail &rhs) {
-            this->x = rhs.x;
-            this->y = rhs.y;
-            this->uniqueCoords = rhs.uniqueCoords;
-        }
 };
 
 bool isAdjacent(Tail head, Tail tail) {
-    if (head.x == tail.x && head.y == tail.y) {
-        return true;
-    }
-
-    if (head.x == tail.x +1 && head.y == tail.y) {
-        return true;
-    }
-
-    if (head.x == tail.x - 1 && head.y == tail.y) {
-        return true;
-    }
-
-    if (head.x == tail.x + 1 && head.y == tail.y + 1) {
-        return true;
-    }
-
-    if (head.x == tail.x - 1 && head.y == tail.y + 1) {
-        return true;
-    }
-
-    if (head.x == tail.x - 1 && head.y == tail.y - 1) {
-        return true;
-    }
-
-    if (head.x == tail.x + 1 && head.y == tail.y - 1) {
-        return true;
-    }
-
-    if (head.x == tail.x && head.y == tail.y + 1) {
-        return true;
-    }
-
-    if (head.x == tail.x && head.y == tail.y - 1) {
-        return true;
-    }
-
-    return false;
+    vector<signed int> range;
+    range.push_back(-1);
+    range.push_back(0);
+    range.push_back(1);
+    return (find(range.begin(), range.end(), head.x - tail.x) != range.end() && find(range.begin(), range.end(), head.y - tail.y) != range.end());
 }
 
 void updateCoords(Tail *tail) {
@@ -69,17 +26,6 @@ void updateCoords(Tail *tail) {
         tail->uniqueCoords.push_back(coords);
     }
 }
-
-Tail updateCoordsWithRet(Tail tail) {
-    string coords = "";
-    coords += to_string(tail.x);
-    coords += to_string(tail.y);
-    if (std::find(tail.uniqueCoords.begin(), tail.uniqueCoords.end(), coords) == tail.uniqueCoords.end()) {
-        tail.uniqueCoords.push_back(coords);
-    }
-    return tail;
-}
-
 void moveTail(Tail *head, Tail *tail) {
     
     if (isAdjacent(*head, *tail)) {
@@ -96,85 +42,6 @@ void moveTail(Tail *head, Tail *tail) {
     } else if (head->y - tail->y > 0) {
         tail->y += 1;
     }
-}
-
-Tail moveTailWithRet(Tail head, Tail tail) {
-    
-    if (isAdjacent(head, tail)) {
-        return tail;
-    }
-
-
-    if (head.x == tail.x && head.y == tail.y + 2) {
-        tail.y = tail.y + 1;
-        return tail;
-    }
-
-    if (head.x == tail.x && head.y == tail.y - 2) {
-        tail.y = tail.y - 1;
-        return tail;
-    }
-
-    if (head.x == tail.x +2 && head.y == tail.y) {
-        tail.x = tail.x + 1;
-        return tail;
-    }
-
-    if (head.x == tail.x - 2 && head.y == tail.y) {
-        tail.x = tail.x-1;
-        return tail;
-    }
-
-    if (head.x == tail.x + 1 && head.y == tail.y + 2) {
-        tail.x = tail.x + 1;
-        tail.y = tail.y + 1;
-        return tail;
-    }
-
-    if (head.x == tail.x -1  && head.y == tail.y + 2) {
-        tail.x = tail.x - 1;
-        tail.y = tail.y + 1;
-        return tail;
-    }
-
-    if (head.x == tail.x - 2 && head.y == tail.y - 1) {
-        tail.x = tail.x - 1;
-        tail.y = tail.y - 1;
-        return tail;
-    }
-
-    if (head.x == tail.x + 2 && head.y == tail.y - 1) {
-        tail.x = tail.x + 1;
-        tail.y = tail.y - 1;
-        return tail;
-    }
-
-    if (head.x == tail.x + 2 && head.y == tail.y + 1) {
-        tail.x = tail.x + 1;
-        tail.y = tail.y + 1;
-        return tail;
-    }
-
-    if (head.x == tail.x - 2 && head.y == tail.y + 1) {
-        tail.x = tail.x - 1;
-        tail.y = tail.y + 1;
-
-        return tail;
-    }
-
-    if (head.x == tail.x + 1 && head.y == tail.y - 2) {
-        tail.y = tail.y - 1;
-        tail.x = tail.x + 1;
-        return tail;
-    }
-
-    if (head.x == tail.x - 1 && head.y == tail.y - 2) {
-        tail.y = tail.y - 1;
-        tail.x = tail.x - 1;
-        return tail;
-    }
-
-    return tail;
 }
 
 void move(Tail *head, string direction) {
@@ -202,9 +69,9 @@ void runSimulation(vector<string> values, vector<Tail> *tails) {
             for (int j = 0; j < tails->size() - 1; j++) {
                 if (j == 0) {
                     move(&tails->at(j), direction);
-                }
+                } 
                 moveTail(&tails->at(j), &tails->at(j+1));
-                tails->at(j+1) = updateCoordsWithRet(tails->at(j+1));
+                updateCoords(&tails->at(j+1));
             }
         }
     }

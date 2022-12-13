@@ -1,3 +1,5 @@
+import json
+
 def setup():
     lines = []
     with (open("test-input.txt")) as f:
@@ -67,3 +69,21 @@ if __name__ == "__main__":
     matrix = toMatrix()
     seen = findSeen(matrix)
     print(seen)
+
+    with open("input.txt") as f:
+        lines = f.readlines()
+
+    toAdd = {}
+    obj = []
+    index = 0
+    for line in lines:
+        i = 0
+        for l in line.strip('\n'):
+            toAdd[i] = l
+            i += 1
+        obj.append([toAdd])
+        toAdd = {}
+        index += 1
+
+    with open("../vis/visualisation/src/files/day8.json", "w+") as f:
+        json.dump(obj, f, indent=4)
