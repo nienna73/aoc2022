@@ -8,13 +8,13 @@
 
 class Monkey{
     public:
-        vector<unsigned long long> items;
-        long itemsInspected;
+        vector<long long> items;
+        long long itemsInspected;
         char operation;
-        int factor;
-        int test;
-        int ifTrue;
-        int ifFalse;
+        long long factor;
+        long long test;
+        long long ifTrue;
+        long long ifFalse;
 
         void operator=(Monkey *rhs) {
             items = rhs->items;
@@ -56,12 +56,12 @@ bool isNumber(const string& str)
     return str.find_first_not_of("0123456789") == string::npos;
 }
 
-int getLast(string s) {
+long long getLast(string s) {
     // input example: Operation: new = old * 19
     // return from that input: 19
     vector<string> parts = splitString(s, ' ');
     if (isNumber(parts[parts.size() - 1])) {
-        int ret = stoi(parts[parts.size() - 1]);
+        long long ret = stol(parts[parts.size() - 1]);
         return ret;
     } if (parts[parts.size() - 1] == "old") {
         return -1;
@@ -128,13 +128,13 @@ vector<long long> runSimulation(vector<string> input, vector<Monkey> *monkeys, l
                     item = item + factor;
                 }
                 item = floor(item / worryLevel);
-                if (item % activeMonkey.test == 0) {
+                if ((item % activeMonkey.test) == 0) {
                     cout << "moving " << item << " from " << j << " to " << activeMonkey.ifTrue << endl;
                     monkeys->at(activeMonkey.ifTrue).items.push_back(item);
                 } else {
                     cout << "moving " << item << " from " << j << " to " << activeMonkey.ifFalse << endl;
                     monkeys->at(activeMonkey.ifFalse).items.push_back(item);
-                    }
+                }
             }
             j++;
             activeMonkey.items.clear();
@@ -209,14 +209,16 @@ int main() {
 
 
     cout << "Running simulation..." << endl;
-    vector<long long> counts = runSimulation(input, &monkeys, 20, 1);
-    unsigned long long monkeyBusiness = findMonkeyBusiness(monkeys);
-    // // unsigned long long monkeyBusiness = findBusiness(counts);
+    vector<long long> counts = runSimulation(input, &monkeys, 10000, 1);
+    // unsigned long long monkeyBusiness = findMonkeyBusiness(monkeys);
+    unsigned long long monkeyBusiness = findBusiness(counts);
     cout << "Monkey business: " << monkeyBusiness << endl;      
     
     // Part 1: 182293
     // Part 2:
     // 46423787776 is too low
+    // 153947
+    // 157300
 
     return 0;
 }
