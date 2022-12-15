@@ -30,6 +30,14 @@ class Point{
             }
             return false;
         }
+
+        void print() {
+            cout << x << ", " << y << endl;
+            cout << cost << endl;
+            cout << c << endl;
+            cout << visited << endl;
+            cout << endl;
+        }
 };
 
 vector<vector<Point> > initializeMap(vector<string> input) {
@@ -61,6 +69,19 @@ tuple<int, int> getPos(vector<vector<Point> > map, char c) {
     }
 }
 
+vector<tuple<int, int> > getAllAs(vector<vector<Point> > map) {
+    vector<tuple<int, int> > ret;
+    for (vector<Point> v : map) {
+        for (Point p : v) {
+            if (p.c == 'a') {
+                tuple<int, int> t = make_tuple(p.x, p.y);
+                ret.push_back(t);
+            }
+        }
+    }
+    return ret;
+}
+
 vector<vector<bool> > initializeVisited(vector<vector<Point> > map) {
     vector<vector<bool> > ret;
     for (int i = 0; i < map.size(); i++) {
@@ -85,108 +106,113 @@ vector<vector<tuple<int, int, int> > > initializeCost(vector<vector<char> > map)
     return ret;
 }
 
-queue<Point> canMove(char startChar, vector<vector<Point> > map, int startX, int startY, Point* currentPoint) {
-    queue<Point> ret;
-    int cost = map[startX][startY].cost + 1;
-    if ((startX -1 >= 0) && (startChar >= map[startX-1][startY].c) == 1) {
+vector<vector<int> > canMove(vector<vector<Point> > map, int startX, int startY, vector<vector<int> > distance) {
+    Point currentPoint = map[startX][startY];
+    int cost = distance[startX][startY] + 1;
+    char startChar = currentPoint.c;
+    if ((startX -1 >= 0) && (startChar >= map[startX-1][startY].c - 1) == 1) {
         // move up
-        Point p;
-        p.x = startX - 1;
-        p.y = startY;
-        p.cost = cost;
-        p.prevPoint = currentPoint;
-        p.visited = false;
-        if (p != currentPoint->prevPoint) {
-            ret.push(p);
+        if (cost < distance[startX-1][startY]) {
+            distance[startX-1][startY] = cost;
         }
     }
-    if ((startY -1 >= 0) && (startChar >= map[startX][startY-1].c) == 1) {
+    if ((startY -1 >= 0) && (startChar >= map[startX][startY-1].c - 1) == 1) {
         // move left
-         Point p;
-        p.x = startX;
-        p.y = startY-1;
-        p.cost = cost;
-        p.prevPoint = currentPoint;
-        p.visited = false;
-        if (p != currentPoint->prevPoint) {
-            ret.push(p);
+        if (cost < distance[startX][startY-1]) {
+            distance[startX][startY-1] = cost;
         }
     } 
-    if ((startY + 1) < map[0].size() && (startChar >= map[startX][startY+1].c) == 1) {
+    if ((startY + 1) < map[0].size() && (startChar >= map[startX][startY+1].c - 1) == 1) {
         // move right
-         Point p;
-        p.x = startX;
-        p.y = startY + 1;
-        p.cost = cost;
-        p.prevPoint = currentPoint;
-        p.visited = false;
-        if (p != currentPoint->prevPoint) {
-            ret.push(p);
+        if (cost < distance[startX][startY+1]) {
+            distance[startX][startY+1] = cost;
         }
     }
-    if ((startX+1) < map.size() && (startChar >= map[startX+1][startY].c) == 1) {
+    if ((startX+1) < map.size() && (startChar >= map[startX+1][startY].c - 1) == 1) {
         // move down
-         Point p;
-        p.x = startX + 1;
-        p.y = startY;
-        p.cost = cost;
-        p.prevPoint = currentPoint;
-        p.visited = false;
-        if (p != currentPoint->prevPoint) {
-            ret.push(p);
+        if (cost < distance[startX+1][startY]) {
+            distance[startX+1][startY] = cost;
         }
+    }
+    return distance;
+}
+
+vector<tuple<int, int> > minDist(vector<vector<int> > distance, vector<vector<bool> > seen, int k, int j) {
+    vector<tuple<int, int> > ret;
+    int minDistance = distance[k][j] + 1;
+    if (k+1 < distance.size() && seen[k+1][j] == false && distance[k+1][j] <= minDistance) {
+        tuple<int, int> t = make_tuple(k+1, j);
+        ret.push_back(t);
+    }
+    if (k-1 >= 0 && seen[k-1][j] == false && distance[k-1][j] <= minDistance) {
+        tuple<int, int> t = make_tuple(k-1, j);
+        ret.push_back(t);
+    }
+    if (j+1 < distance[0].size() && seen[k][j+1] == false && distance[k][j+1] <= minDistance) {
+        tuple<int, int> t = make_tuple(k, j+1);
+        ret.push_back(t);
+    }
+    if (j-1 >= 0 && seen[k][j-1] == false && distance[k][j-1] <= minDistance) {
+        tuple<int, int> t = make_tuple(k, j-1);
+        ret.push_back(t);
     }
     return ret;
 }
 
+vector<vector<bool> > resetSeen(vector<vector<bool> > seen) {
+    int x = seen.size();
+    int y = seen[0].size();
+    seen.clear();
+    for (int i = 0; i < x; i++) {
+        vector<bool> tmp;
+        for (int j = 0; j < y; j++) {
+            tmp.push_back(false);
+        }
+        seen.push_back(tmp);
+    }
+    return seen;
+}
+
 long findShortestPath(vector<vector<Point> > map, int startX, int startY, int endX, int endY, long stepsTaken) {
-    long moveUp, moveLeft, moveRight, moveDown = 0;
-    char startChar = map[startX][startY].c;
-    Point startPoint = map[startX][startY];
-    startPoint.cost = 0;
-    startPoint.visited = true;
-    queue<Point > q = canMove(startChar, map, startX, startY, &startPoint);
-    vector<Point> uniqueVisited;
-    uniqueVisited.push_back(startPoint);
+    vector<vector<int> > distance;
+    vector<vector<bool> > seen;
+    for (int i = 0; i < map.size(); i++) {
+        vector<int> row1;
+        vector<bool> row2;
+        for (int j = 0; j < map[0].size(); j++) {
+            row1.push_back(GIANT_INT);
+            row2.push_back(false);
+        }
+        distance.push_back(row1);
+        seen.push_back(row2);
+    }
+    distance[startX][startY] = 0;
+    distance = canMove(map, startX, startY, distance);
+    vector<tuple<int, int> > q;
+    vector<tuple<int, int> > canMoveTo = minDist(distance, seen, startX, startY);
+    for (tuple<int, int> t : canMoveTo) {
+        q.push_back(t);
+    }
+
     while (!q.empty()) {
-        Point *p = &q.front();
-        q.pop();
-        if (p->x == endX && p->y == endY) {
-            return p->cost + 1;
-        }
-        if (!p->visited) {
-            p->visited = true;
-
-            if (p->cost > p->prevPoint->cost + 1) {
-                p->cost = p->prevPoint->cost + 1;
+        tuple<int, int> coords = q.front();
+        q.erase(q.begin());
+        seen[get<0>(coords)][get<1>(coords)] = true;
+        distance = canMove(map, get<0>(coords), get<1>(coords), distance);
+        canMoveTo = minDist(distance, seen, get<0>(coords), get<1>(coords));
+        for (tuple<int, int> t : canMoveTo) {
+            if (find(q.begin(), q.end(), t) == q.end()) {
+                q.push_back(t);
             }
-
-            char startChar = p->c;
-            cout << "here: " << p->c << endl;
-            queue<Point> neighbours = canMove(startChar, map, startX, startY, p);
-            while (!neighbours.empty()) {
-                q.push(neighbours.front());
-                neighbours.pop();
-            }
-
-            if (find(uniqueVisited.begin(), uniqueVisited.end(), p) == uniqueVisited.end()) {
-                uniqueVisited.push_back(*p);
-            }
-        }
-        cout << "qsize: " << q.size() << endl;
-        cout << "unique visited: " << uniqueVisited.size() << endl;
-        for (Point p : uniqueVisited) {
-            cout << p.x << ", " << p.y << endl;
         }
     }
 
-    return map[endX][endY].cost;
+    return distance[endX][endY];
 }
 
 
 int main() {
-    cout << (('c' >= 'a' - 1) == 1) << endl;
-    vector<string> values = getValuesFromFile("test-input.txt");
+    vector<string> values = getValuesFromFile("input.txt");
     vector<vector<Point> > map = initializeMap(values);
 
     tuple<int, int> starts = getPos(map, 'S');
@@ -200,16 +226,19 @@ int main() {
     int endY = get<1>(ends);
     map[endX][endY].c = 'z';
 
-    for (vector<Point> v : map) {
-        for (Point p : v) {
-            cout << p.c;
-        }
-        cout << endl;
-    }
-
     long stepsTaken = findShortestPath(map, get<0>(starts), get<1>(starts), get<0>(ends), get<1>(ends), 0);
-    // cout << stepsTaken << endl;
-    // Part 1:
-    // 32766 is too high
+    cout << "Part 1: " << stepsTaken << endl;
+    // Part 1: 383
+
+    long shortestPath = GIANT_INT;
+    vector<tuple<int, int> > a = getAllAs(map);
+    for (tuple<int, int> t : a) {
+        long pathLength = findShortestPath(map, get<0>(t), get<1>(t), get<0>(ends), get<1>(ends), 0);
+        if (pathLength < shortestPath) {
+            shortestPath = pathLength;
+        }
+    }
+    cout << "Part 2: " << shortestPath << endl;
+
     return 0;
 }

@@ -103,9 +103,9 @@ vector<Monkey> initializeMonkeys(vector<string> input) {
     return ret;
 }
 
-vector<long long> runSimulation(vector<string> input, vector<Monkey> *monkeys, long rounds, int worryLevel) {
+vector<unsigned long long> runSimulation(vector<string> input, vector<Monkey> *monkeys, long rounds, int worryLevel) {
     long i = 1;
-    vector<long long> counts;
+    vector<unsigned long long> counts;
     for (int k = 0; k < monkeys->size(); k++) {
         counts.push_back(0);
     }
@@ -163,7 +163,7 @@ unsigned long long findMonkeyBusiness(vector<Monkey> monkeys) {
 
 }
 
-unsigned long long findBusiness(vector<long long> counts) {
+unsigned long long findBusiness(vector<unsigned long long> counts) {
     long long firstHighest = 0;
     long long secondHighest = 0;
     for (long long c : counts) {
@@ -209,7 +209,7 @@ int main() {
 
 
     cout << "Running simulation..." << endl;
-    vector<long long> counts = runSimulation(input, &monkeys, 10000, 1);
+    vector<unsigned long long> counts = runSimulation(input, &monkeys, 10000, 1);
     // unsigned long long monkeyBusiness = findMonkeyBusiness(monkeys);
     unsigned long long monkeyBusiness = findBusiness(counts);
     cout << "Monkey business: " << monkeyBusiness << endl;      
