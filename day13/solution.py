@@ -44,10 +44,30 @@ def getIndexes(lines):
     return indexes
 
 
+def compare(l1, l2):
+
+
+    print("74")
+    return 1
+
 if __name__ == '__main__':
-    lines = getLines("input.txt")
+    lines = getLines("test-input.txt")
     lines = removeBlanks(lines)
-    indexes = getIndexes(lines)
-    s = sum(indexes)
-    print(s)
-    print(indexes)
+    linesList = []
+    matches = []
+    for line in lines:
+        m = eval(line)
+        linesList.append(m)
+    
+    i = 0
+    out = 0
+    while i < len(linesList):
+        l1 = linesList[i]
+        l2 = linesList[i+1]
+        i += 2
+        comparison = compare(l1, l2)
+        out += comparison * (i/2)
+        if comparison == 1:
+            print(f"Pair {i/2} was in order")
+    
+    print("SUM:", out)

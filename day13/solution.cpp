@@ -140,24 +140,59 @@ vector<tuple<int, bool> > getCorrectPairs(vector<string> input) {
         vector<string> part1Split = splitString(part1, ',');
         vector<string> part2Split = splitString(part2, ',');
         int j = 1;
+        int k = 1;
+        int numOpen1 = 0;
+        int numClose1 = 0;
+        int numOpen2 = 0;
+        int numClose2 = 0;
+        bool insideList;
         tuple<int, bool> pair = make_tuple(-1, false);
-        while (j < part1.length() && j < part2.length()) {
-            string chunk1 = findChunk(part1, j);
-            string chunk2 = findChunk(part2, j);
-            cout << "Chunk 1: " << chunk1 << endl;
-            cout << "Chunk 2: " << chunk2 << endl;
-            if (chunk1.length() < chunk2.length()) {
-                pair = make_tuple(i/2, true);
-                j = part1.size();
-            } else if (chunk1.length() > chunk2.length()) {
-                pair = make_tuple(i/2, false);
-                j = part1.size();
-            } else {
-                if (firstNumberBigger(chunk1, chunk2)) {
+        while (j < part1.length() && k < part2.length()) {
+            char c1 = part1[j];
+            char c2 = part2[k];
+            if (j >= part2.length()) {
+                // right side ran out of items
+                pair = make_tuple(1/2, false);
+                j = part1.length();
+            }
+            else if (isdigit(c1) && isdigit(c2)) {
+                if ((int) c1 > (int) c2) {
                     pair = make_tuple(i/2, false);
+                    j = part1.length();
+                } else if ((int) c1 < (int) c2) {
+                    pair = make_tuple(i/2, true);
+                    j = part1.length();
+                }
+            } else if (c1 != ']' && c2 != ']') {
+                while (!isdigit(c1)) {
+                    c1 = part1[j];
+                    j++;
+                }
+                while (!isdigit(c2)) {
+                    c2 = part2[k];
+                    k++;
+                }
+                if ((int) c1 > (int) c2) {
+                    pair = make_tuple(i/2, false);
+                    j = part1.length();
+                } else if ((int) c1 < (int) c2) {
+                    pair = make_tuple(i/2, true);
+                    j = part1.length();
+                }
+            } else if (isdigit(c1) && c2 == '[') {
+                pair = make_tuple(i/2, true);
+                j = part1.length();
+            } else {
+                if (isdigit(c1) && c2 == ']') {
+                    pair = make_tuple(i/2, false);
+                    j = part1.length();
+                } else if (isdigit(c2) && c1 == ']') {
+                    pair = make_tuple(i/2, true);
+                    j = part1.length();
                 }
             }
             j++;
+            k++;
         }
         if (get<0>(pair) == -1) {
             if (part1.size() > part2.size()) {
@@ -166,6 +201,7 @@ vector<tuple<int, bool> > getCorrectPairs(vector<string> input) {
                 pair = make_tuple(i/2, true);
             }
         }
+        cout << get<1>(pair) << endl;
         ret.push_back(pair);
     }
     return ret;
@@ -175,7 +211,7 @@ int getSumPairsInRightOrder(vector<tuple<int, bool> > pairs) {
     int ret = 0;
     for (tuple<int, bool> t : pairs) {
         if (get<1>(t)) {
-            cout << get<0>(t) << endl;
+            cout << "Index: " << get<0>(t) << endl;
             ret += get<0>(t) + 1;
         }
     }
@@ -187,7 +223,7 @@ int main() {
     values = removeBlankLines(values);
     vector<tuple<int, bool> > correctIndexes = getCorrectPairs(values);
     int sum = getSumPairsInRightOrder(correctIndexes);
-    cout << sum << endl;
+    cout << "Sum: " << sum << endl;
     return 0;
     // Part 1:
     // 2856 is too low
@@ -195,4 +231,7 @@ int main() {
     // 5722 is too low
     // 5810 is wrong
     // 6208 is wrong
+    // 6388 is wrong
+    // 5892 is wrong
+    // 5825 is wrong
 }

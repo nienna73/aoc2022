@@ -109,16 +109,19 @@ vector<unsigned long long> runSimulation(vector<string> input, vector<Monkey> *m
     for (int k = 0; k < monkeys->size(); k++) {
         counts.push_back(0);
     }
+    int shared_modulus = 1;
+    for (int i = 0; i < monkeys->size(); i++) {
+        shared_modulus *= monkeys->at(i).test;
+    }
     while (i <= rounds) {
         int j = 0;
         for (Monkey &activeMonkey : *monkeys) {
             cout << "Processing monkey " << j << endl;
-            for (int n = 0; n < activeMonkey.items.size(); n++) {
-                unsigned long long item = activeMonkey.items[n];
+            for (unsigned long long item : activeMonkey.items) {
                 counts[j] += 1;
                 int factor = activeMonkey.factor;
                 activeMonkey.itemsInspected += 1;
-                if (activeMonkey.factor == -1) {
+                if (factor == -1) {
                     factor = item;
                     cout << "set factor to item" << endl;
                 }
@@ -127,7 +130,8 @@ vector<unsigned long long> runSimulation(vector<string> input, vector<Monkey> *m
                 } else if (activeMonkey.operation == 'a') {
                     item = item + factor;
                 }
-                item = floor(item / worryLevel);
+                // item = floor(item / worryLevel);
+                item = item % shared_modulus;
                 if ((item % activeMonkey.test) == 0) {
                     cout << "moving " << item << " from " << j << " to " << activeMonkey.ifTrue << endl;
                     monkeys->at(activeMonkey.ifTrue).items.push_back(item);
@@ -204,21 +208,23 @@ void test_getLast() {
 
 int main() {
     test_getLast();
-    vector<string> input = getValuesFromFile("test-input.txt");
+    vector<string> input = getValuesFromFile("input.txt");
     vector<Monkey> monkeys = initializeMonkeys(input);
 
 
     cout << "Running simulation..." << endl;
     vector<unsigned long long> counts = runSimulation(input, &monkeys, 10000, 1);
-    // unsigned long long monkeyBusiness = findMonkeyBusiness(monkeys);
-    unsigned long long monkeyBusiness = findBusiness(counts);
+    unsigned long long monkeyBusiness = findMonkeyBusiness(monkeys);
+    // unsigned long long monkeyBusiness = findBusiness(counts);
     cout << "Monkey business: " << monkeyBusiness << endl;      
     
     // Part 1: 182293
     // Part 2:
     // 46423787776 is too low
+    // 46224695250 is wrong
     // 153947
     // 157300
+    // 31422410019 is too low
 
     return 0;
 }
