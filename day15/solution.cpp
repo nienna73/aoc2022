@@ -8,6 +8,7 @@
 
 
 #define LINE_OF_INTEREST 2000000
+// #define LINE_OF_INTEREST 10
 #define BUFFER 1024
 #define ROW_SIZE 512
 
@@ -67,37 +68,36 @@ int getManhattanDistance(long x1, long y1, long x2, long y2) {
     return part1 + part2;
 }
 
-void updateRange(long sensorX, long sensorY, long beaconX, long beaconY, vector<vector<char> > &vec, long line, long maxX, unordered_set<signed int> &xPosSeen) {
+void updateRange(long sensorX, long sensorY, long beaconX, long beaconY, unordered_set<signed int> &xPosSeen, unordered_set<signed int> beacons) {
     int distance = getManhattanDistance(sensorX, sensorY, beaconX, beaconY);
     cout << "Distance to beacon: " << distance << endl;
-    int distanceToTarget = getManhattanDistance(sensorX, sensorY, sensorX, line);
+    int distanceToTarget = getManhattanDistance(sensorX, sensorY, sensorX, LINE_OF_INTEREST);
     cout << "Distance to line: " << distanceToTarget << endl;
     if (distanceToTarget > distance) {
         return;
     }
     // we're going to pass through the line of interest at some point
     // what will the xCoord be when we do so?
-    int distanceToTargetLine = abs(sensorY - line);
-    int spreadOfX = abs(distance - distanceToTargetLine);
+    int spreadOfX = distance - distanceToTarget;
 
     signed int index = sensorX;
-    int row = abs(floor(index/ROW_SIZE)) +1;
-    int spot = abs(index % ROW_SIZE);
-    xPosSeen.insert(index);
+    if (beacons.find(index) == beacons.end()) {
+        xPosSeen.insert(index);
+    }
     
-    for (int i = 0; i <= spreadOfX; i++ ) {
+    for (int i = 1; i <= spreadOfX; i++ ) {
         if (i == floor(spreadOfX / 2)) {
             cout << "passed halfway point" << endl;
         }
         index = sensorX + i;
-        row = abs(floor(index/ROW_SIZE)) +1;
-        spot = abs(index % ROW_SIZE);
-        xPosSeen.insert(index);
+        if (beacons.find(index) == beacons.end()) {
+            xPosSeen.insert(index);
+        }
 
         index = sensorX - i;
-        row = abs(floor(index/ROW_SIZE))+1;
-        spot = abs(index % ROW_SIZE);
-        xPosSeen.insert(index);
+        if (beacons.find(index) == beacons.end()) {
+            xPosSeen.insert(index);
+        }
 
     }
     cout << "finished update" << endl;
@@ -116,7 +116,7 @@ vector<vector<char> > initializeMap(vector<string> values, tuple<long, long> xBo
 
     vector<vector<char>> vec(ceil(xCoordMax/ROW_SIZE) + BUFFER, vector<char> (ROW_SIZE, '.'));
     unordered_set<signed int> xPosSeen;
-    // vector<bool> pointsTouched(xCoordMax + BUFFER, false);
+    unordered_set<signed int> beaconPos;
     for (string value : values) {
         vector<string> split = splitString(value, ':');
         string beacon = split[1];
@@ -128,46 +128,36 @@ vector<vector<char> > initializeMap(vector<string> values, tuple<long, long> xBo
             if (s.find('x') != doesNotExist) {
                 vector<string> xSplit = splitString(s, '=');
                 vector<string> justX = splitString(xSplit[1], ',');
-                beaconX = stol(justX[0]); // + abs(xMin);
+                beaconX = stol(justX[0]);
             }
             if (s.find('y') != doesNotExist) {
                 vector<string> ySplit = splitString(s, '=');
-                beaconY = stol(ySplit[1]); // + abs(yMin);
+                beaconY = stol(ySplit[1]);
             }
         }
         for (string s : sensorSplit) {
             if (s.find('x') != doesNotExist) {
                 vector<string> xSplit = splitString(s, '=');
                 vector<string> justX = splitString(xSplit[1], ',');
-                sensorX = stol(justX[0]); // + abs(xMin);
+                sensorX = stol(justX[0]);
             }
             if (s.find('y') != doesNotExist) {
                 vector<string> ySplit = splitString(s, '=');
-                sensorY = stol(ySplit[1]); // + abs(yMin);
+                sensorY = stol(ySplit[1]);
             }
         }
         if (beaconY == LINE_OF_INTEREST) {
-            int row = abs(floor(beaconX / ROW_SIZE));;
-            int spot = abs(beaconX % ROW_SIZE);
-            xPosSeen.insert(beaconX);
+            beaconPos.insert(beaconX);
         }
         if (sensorY == LINE_OF_INTEREST) {
-            int row = abs(floor(sensorX / ROW_SIZE));
-            int spot = abs(sensorX % ROW_SIZE);
-            xPosSeen.insert(sensorX);
+            beaconPos.insert(sensorX);
         }
-        updateRange(sensorY, sensorX, beaconY, beaconX, vec, LINE_OF_INTEREST, xMax, xPosSeen);
+        updateRange(sensorY, sensorX, beaconY, beaconX, xPosSeen, beaconPos);
         cout << "Finished: " << value << endl;
 
     }
-    int ret = 0;
-    for (signed int i : xPosSeen) {
-        // cout << i << ", ";
-        ret++;
-    }
     cout << endl;
-    cout << ret << endl;
-    cout << xPosSeen.size() << endl;
+    cout << xPosSeen.size() - beaconPos.size() << endl;
     return vec;
 }
 

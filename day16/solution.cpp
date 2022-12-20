@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <cmath>
 
 class Valve {
     public:
@@ -12,6 +13,7 @@ class Valve {
         string name;
         bool isOpen;
         int openedOn;
+        vector<tuple<Valve*, int> > distancesTo;
 
         bool operator==(Valve rhs) {
             if (name == rhs.name) {
@@ -36,6 +38,7 @@ class Valve {
             placeholderTunnels = rhs->placeholderTunnels;
             isOpen = rhs->isOpen;
             openedOn = rhs->openedOn;
+            distancesTo = rhs->distancesTo;
         }
 };
 
@@ -54,16 +57,12 @@ vector<Valve> initializeValves(vector<string> input) {
         v.flowRate = flowRate;
         vector<string> splitTunnels = splitString(split[1], ',');
         vector<string> placeholders;
-        if (splitTunnels.size() == 2) {
-            string firstTunnel = "";
-            firstTunnel += splitTunnels[1][1];
-            firstTunnel += splitTunnels[1][2];
-            placeholders.push_back(firstTunnel);
-        }
-        vector<string> moreTunnels = splitString(splitTunnels[0], ' ');
-        for (string w : moreTunnels) {
-            if (w.length() == 2 && w != "to") {
-                placeholders.push_back(w);
+        for (string w : splitTunnels) {
+            vector<string> anotherSplit = splitString(w, ' ');
+            for (string q : anotherSplit) {
+                if (q.length() == 2 && q != "to") {
+                    placeholders.push_back(q);
+                }
             }
         }
         v.placeholderTunnels = placeholders;
@@ -91,56 +90,54 @@ void initializeTunnels(vector<Valve> &valves) {
 
 }
 
-tuple<int, Valve> pathToBestValue(Valve active, vector<string> opened) {
-    cout << "Current name: " << active.name << endl;
+int findDistanceBetween(Valve &v, Valve &u) {
     int ret = 0;
-    int curFlowRate = active.flowRate;
-    Valve best = active;
-    for (Valve *v : active.tunnels) {
-        if (v->flowRate > curFlowRate) {
-            if (find(opened.begin(), opened.end(), v->name) == opened.end()) {
-                cout << "Setting best to " << v->name << endl;
-                best = v;
+    if (find(v.tunnels.begin(), v.tunnels.end(), &u) != v.tunnels.end()) {
+        return ret + 1;
+    } else {
+        vector<Valve> toTry;
+        vector<Valve> tried;
+        Valve current = v;
+        ret++;
+        tried.push_back(v);
+        for (Valve *w : v.tunnels) {
+            toTry.push_back(*w);
+        }
+        while (!toTry.empty()) {
+            Valve w = toTry[0];
+            toTry.erase(toTry.begin());
+            tried.push_back(w);
+            if (find(w.tunnels.begin(), w.tunnels.end(), &u) != w.tunnels.end()) {
+                return ret +1;
+            } 
+            else {
+                for (Valve *q : w.tunnels) {
+                    if (find(tried.begin(), tried.end(), *q) == tried.end()) {
+                        toTry.push_back(*q);
+                    }
+                }
+            }
+            if (find(current.tunnels.begin(), current.tunnels.end(), &w) == current.tunnels.end()) {
+                ret += 1;
+                current = w;
             }
         }
     }
-    if (best == active) {
-        // find the highest neighbour instead
-        cout << "need to get highest neighbour" << endl << endl;
-        ret = 1;
-        Valve *secondBest = &active;
-        int secondBestFlow = 0;
-        cout << "active tunnels: " << active.tunnels.size() << endl;
-        for (Valve *v : active.tunnels) {
-            if (find(opened.begin(), opened.end(), v->name) == opened.end()) {
-                if (v->flowRate > secondBestFlow) {
-                    cout << "setting best to " << v->name << endl;
-                    secondBest = v;
-                    secondBestFlow = v->flowRate;
-                }
+    return -1;
+}
+
+void initializeDistancesTo(vector<Valve> &valves) {
+    for (Valve &v : valves) {
+        for (Valve &u : valves) {
+            vector<Valve> tried;
+            if (v == u) {
+                continue;
             }
+            tried.push_back(v);
+            int distanceTo = findDistanceBetween(v, u);
+            tuple<Valve*, int> add = make_tuple(&u, distanceTo);
+            v.distancesTo.push_back(add);
         }
-        cout << "Changing to: " << secondBest->name << endl;
-        if (*secondBest != active) {
-            return make_tuple(ret, *secondBest);
-        } else {
-            ret = 1;
-            *secondBest = &active;
-            secondBestFlow = 0;
-            cout << "active tunnels: " << active.tunnels.size() << endl;
-            for (Valve *v : active.tunnels) {
-                if (v->flowRate > secondBestFlow) {
-                    cout << "setting best to " << v->name << endl;
-                    secondBest = v;
-                    secondBestFlow = v->flowRate;
-                }
-            }
-            cout << "Changing to: " << secondBest->name << endl;
-            return make_tuple(ret, *secondBest);
-        }
-    } else {
-        cout << "Changing to: " << best.name << endl;
-        return make_tuple(ret, best);
     }
 }
 
@@ -149,23 +146,61 @@ void runSimulation(vector<Valve> valves) {
     Valve* current = getRealTunnel(valves, "AA");
     vector<string> opened;
     int totalAirFlow = 0;
+    Valve* best;
+    int ret = 0;
     while (i > 0) {
-        tuple<int, Valve> turn = pathToBestValue(*current, opened);
-        cout << "after the call " << endl;
-        int cost = get<0>(turn);
-        Valve n = get<1>(turn);
-        current = &n;
-        i -= cost;
-        current = getRealTunnel(valves, n.name);
-        Valve c = *current;
-        c.isOpen = true;
-        opened.push_back(c.name);
-        i--;
-        c.openedOn = i;
-        totalAirFlow += c.flowRate * i;
-        cout << "Time left: " << i << endl;
+        int timeDelay = 0;
+        int airFlow = 0;
+        int airFlowToAdd = 0;
+        int best = -30;
+        int time = 0;
+        int measure = -30;
+        Valve *b;
+        cout << current->name << endl;
+        sort(current->distancesTo.begin(), current->distancesTo.end(), [](const tuple<Valve*, int>& lhs, const tuple<Valve*, int>& rhs) {
+            return get<1>(lhs) > get<1>(rhs);
+        });
+        for (tuple<Valve*, int> t : current->distancesTo) {
+            Valve *v = get<0>(t);
+            time = get<1>(t);
+            if (time < 0) {
+                continue;
+            }
+            if (find(opened.begin(), opened.end(), v->name) != opened.end()) {
+                continue;
+            }
+            if (v->flowRate == 0) {
+                continue;
+            }
+            airFlow = v->flowRate* (i - time);
+            measure = v->flowRate / time;
+            // cout << v->name << ": " << measure << endl;
+            if (measure > best) {
+                best = measure;
+                b = v;
+                timeDelay = time;
+                airFlowToAdd = airFlow;
+            } if (measure == best) {
+                if (time < timeDelay) {
+                    best = measure;
+                    b = v;
+                    timeDelay = time;
+                    airFlowToAdd = airFlow;
+                }
+            }
+        }
+        if (timeDelay != 0) {
+            i -= timeDelay;
+        } else {
+            i--;
+        }
+        cout << "time left " << i << endl;
+        ret += airFlowToAdd;
+        opened.push_back(b->name);
+        current = b;
     }
-    cout << "Total airflow: " << totalAirFlow << endl;
+
+    cout << "Total airflow: " << ret << endl;
 }
 
 void getTotalAirFlow(vector<Valve> valves) {
@@ -183,9 +218,13 @@ int main() {
     vector<string> values = getValuesFromFile("test-input.txt");
     vector<Valve> valves = initializeValves(values);
     initializeTunnels(valves);
-    for (Valve v : valves) {
-        cout << v.tunnels.size() << endl;
-    }
+    initializeDistancesTo(valves);
+
     runSimulation(valves);
-    getTotalAirFlow(valves);
+    Valve* v = getRealTunnel(valves, "CC");
+    // for (tuple<Valve*, int> t : v->distancesTo) {
+    //     cout << get<0>(t)->name << ": " << get<1>(t) << endl;
+    // }
+    // d -> b -> j -> h -> e -> c
+    // Part 1: 1038 is too low
 }
