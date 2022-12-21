@@ -172,7 +172,7 @@ void runSimulation(vector<Valve> valves) {
             if (v->flowRate == 0) {
                 continue;
             }
-            airFlow = v->flowRate* (i - time);
+            airFlow = v->flowRate * (i - time);
             measure = v->flowRate / time;
             // cout << v->name << ": " << measure << endl;
             if (measure > best) {

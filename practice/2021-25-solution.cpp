@@ -4,6 +4,26 @@
 #include <string>
 using namespace std;
 
+// referencing: https://stackoverflow.com/questions/9158150/colored-output-in-c
+#define RESET   "\033[0m"
+#define BLACK   "\033[30m"      /* Black */
+#define RED     "\033[31m"      /* Red */
+#define GREEN   "\033[32m"      /* Green */
+#define YELLOW  "\033[33m"      /* Yellow */
+#define BLUE    "\033[34m"      /* Blue */
+#define MAGENTA "\033[35m"      /* Magenta */
+#define CYAN    "\033[36m"      /* Cyan */
+#define WHITE   "\033[37m"      /* White */
+#define BOLDBLACK   "\033[1m\033[30m"      /* Bold Black */
+#define BOLDRED     "\033[1m\033[31m"      /* Bold Red */
+#define BOLDGREEN   "\033[1m\033[32m"      /* Bold Green */
+#define BOLDYELLOW  "\033[1m\033[33m"      /* Bold Yellow */
+#define BOLDBLUE    "\033[1m\033[34m"      /* Bold Blue */
+#define BOLDMAGENTA "\033[1m\033[35m"      /* Bold Magenta */
+#define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
+#define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
+
+
 class SeaCucumber {
     public:
         int x, y;
@@ -34,7 +54,7 @@ vector<SeaCucumber> initializeSeaCucumbers(vector<string> values) {
                 } else if (c == '>') {
                     sc.direction = "east";
                 } else {
-                    cout << "Not a sea cucumber?" << endl;
+                    // cout << "Not a sea cucumber?" << endl;
                     vector<SeaCucumber> incorrectInput;
                     return incorrectInput;
                 }
@@ -161,14 +181,26 @@ void printBoard(vector<vector<bool> > map, vector<SeaCucumber> seaCucumbers) {
             bool val = row[i];
             SeaCucumber sc = getCukeWithCoords(j, i, seaCucumbers);
             if (sc.direction == "south") {
-                cout << "v";
+                cout << RED << "v" << RESET << flush;
             } else if (sc.direction == "east") {
-                cout << ">";
+                cout << GREEN << ">" << RESET << flush;
             } else {
-                cout << ".";
+                cout << BOLDCYAN << "." << RESET << flush;
             }
         }
         cout << endl;
+    }
+}
+
+void clearBoard(vector<vector<bool> > map) {
+    string s = "\33\r";
+    string a = "\33[A";
+    for (int i = 0; i < map.size(); i++) {
+        for (int j = 0; j < map[0].size(); j++) {
+            cout << s << flush;
+            cout << a << flush;
+            cout << s << flush;
+        }
     }
 }
 
@@ -177,6 +209,7 @@ int runSimulation(vector<vector<bool> > map, vector<SeaCucumber> seaCucumbers, i
     bool didMoveSouth = true;
     long int moves = 0;
     while (didMoveEast || didMoveSouth) {   // one loop per round
+        clearBoard(map);
         moves += 1;
         int length = seaCucumbers.size();
         for (SeaCucumber &cuke: seaCucumbers) {
@@ -190,9 +223,10 @@ int runSimulation(vector<vector<bool> > map, vector<SeaCucumber> seaCucumbers, i
         }
         didMoveSouth = move(seaCucumbers, "south");
         map = initializeMap(seaCucumbers, height, width);
-        if (moves % 100 == 0) {
-            cout << "Simulation has taken " << moves << " moves" << endl;
-        }
+        // if (moves % 100 == 0) {
+        //     cout << "Simulation has taken " << moves << " moves" << endl;
+        // }
+        printBoard(map, seaCucumbers);
     }
 
     return moves;

@@ -3,6 +3,27 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <unistd.h>
+
+
+// referencing: https://stackoverflow.com/questions/9158150/colored-output-in-c
+#define RESET   "\033[0m"
+#define BLACK   "\033[30m"      /* Black */
+#define RED     "\033[31m"      /* Red */
+#define GREEN   "\033[32m"      /* Green */
+#define YELLOW  "\033[33m"      /* Yellow */
+#define BLUE    "\033[34m"      /* Blue */
+#define MAGENTA "\033[35m"      /* Magenta */
+#define CYAN    "\033[36m"      /* Cyan */
+#define WHITE   "\033[37m"      /* White */
+#define BOLDBLACK   "\033[1m\033[30m"      /* Bold Black */
+#define BOLDRED     "\033[1m\033[31m"      /* Bold Red */
+#define BOLDGREEN   "\033[1m\033[32m"      /* Bold Green */
+#define BOLDYELLOW  "\033[1m\033[33m"      /* Bold Yellow */
+#define BOLDBLUE    "\033[1m\033[34m"      /* Bold Blue */
+#define BOLDMAGENTA "\033[1m\033[35m"      /* Bold Magenta */
+#define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
+#define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
 string removeChar(string s, char c) {
     string ret = "";
@@ -77,7 +98,6 @@ vector<vector<char> > initializeMap(vector<string> input) {
     int maxX = findMaxX(input);
     int maxY = findMaxY(input) + Y_BUFFER; // make it much longer for part 2
     int minY = findMinY(input) - Y_BUFFER;
-    cout << maxX << ", " << maxY << ", " << minY << endl;
     vector<vector<char> > map;
     for (int i = 0; i <= maxX; i++) {
         vector<char> vec;
@@ -86,7 +106,6 @@ vector<vector<char> > initializeMap(vector<string> input) {
         }
         map.push_back(vec);
     }
-    cout << "made main empty map" << endl;
 
     // add the floor for part 2
     vector<char> vec1; // the empty line between the bottom and the floor
@@ -101,9 +120,6 @@ vector<vector<char> > initializeMap(vector<string> input) {
         vec2.push_back('#');
     }
     map.push_back(vec2);
-
-    cout << "added floor" << endl;
-    cout << map.size() << ", " << map[0].size() << endl;
     
 
     for(string s : input) {
@@ -158,7 +174,6 @@ bool canMove(int startY, int startX, vector<vector<char> > &map) {
     }
     if (map[startX][startY] == '#' && startX+1 < map.size() && map[startX+1][startY-1] != '.' && map[startX+1][startY+1] != '.') {
         map[startX-1][startY] = 'o';
-        cout << "return 1" << endl;
         return true;
     } else if (map[startX][startY] == 'o') {
         if (startX+1 < map.size() && startY-1 >= 0) {
@@ -184,12 +199,10 @@ bool canMove(int startY, int startX, vector<vector<char> > &map) {
 
     if (startX+1 < map.size() && map[startX+1][startY] == '.') {
         // move down
-        cout << "recurse 1 " << endl;
         return canMove(startY, startX+1, map);
     }
     if (startX+1 < map.size() && startY-1 >= 0 && map[startX+1][startY-1] == '.') {
         // move left and down
-        cout << "recurse 2" << endl;
         return canMove(startY-1, startX+1, map);
     }
     else if (startX+1 == map.size()) {
@@ -197,7 +210,6 @@ bool canMove(int startY, int startX, vector<vector<char> > &map) {
     }
     if (startX+1 < map.size() && startY+1 < map[0].size() && map[startX+1][startY+1] == '.') {
         // move right and down
-        cout << "recurse 3" << endl;
         return canMove(startY+1, startX+1, map);
     }
     // end condition for Part 2
@@ -205,8 +217,35 @@ bool canMove(int startY, int startX, vector<vector<char> > &map) {
         return false;
     }
 
-    cout << map[startX][startY] << endl;
     return false;
+}
+
+void printMap(vector<vector<char> > map) {
+    for (vector<char> v : map) {
+        for (int i = 425; i < 625; i++) {
+            char c = v[i];
+            if (c == '#') {
+                cout << RED << c << RESET << flush;
+            } else if (c == 'o') {
+                cout << BOLDYELLOW << c << RESET << flush;
+            } else {
+                cout << WHITE << c << RESET << flush;
+            }
+        }
+        cout << endl << flush;
+    }
+}
+
+void clearMap(vector<vector<char> > map) {
+    for (int i = 0; i < map.size(); i++) {
+        for (int j = 0; j < map[0].size(); j++) {
+            string s = "\33\r";
+            cout << s << flush;
+            string a = "\33[A";
+            cout << a << flush;
+            cout << s << flush;
+        }
+    }
 }
 
 int runSimulation(vector<vector<char> > &map, int minY) {
@@ -214,8 +253,7 @@ int runSimulation(vector<vector<char> > &map, int minY) {
     int movesMade = 0;
     int startY = 500 - minY + Y_BUFFER;   // subtract values for part 2
     int startX = 0; 
-    cout << startY << endl;
-    cout << "Running simulation..." << endl;
+    int j = 1;
     while (moved) {
         bool t = canMove(startY, startX, map);
         if (t) {
@@ -223,6 +261,9 @@ int runSimulation(vector<vector<char> > &map, int minY) {
         } else {
             moved = false;
         }
+        printMap(map);
+        // sleep(2);
+        clearMap(map);
     }
     
 
