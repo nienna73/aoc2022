@@ -149,6 +149,7 @@ void runSimulation(vector<Valve> valves) {
     Valve* best;
     int ret = 0;
     while (i > 0) {
+        cout << "time left " << i << endl;
         int timeDelay = 0;
         int airFlow = 0;
         int airFlowToAdd = 0;
@@ -194,10 +195,12 @@ void runSimulation(vector<Valve> valves) {
         } else {
             i--;
         }
-        cout << "time left " << i << endl;
         ret += airFlowToAdd;
         opened.push_back(b->name);
+        b->isOpen = true;
+        b->openedOn = i;
         current = b;
+        timeDelay = 0;
     }
 
     cout << "Total airflow: " << ret << endl;
@@ -221,7 +224,10 @@ int main() {
     initializeDistancesTo(valves);
 
     runSimulation(valves);
-    Valve* v = getRealTunnel(valves, "CC");
+    for (Valve v : valves) {
+        cout << v.isOpen << endl;
+    }
+    // Valve* v = getRealTunnel(valves, "CC");
     // for (tuple<Valve*, int> t : v->distancesTo) {
     //     cout << get<0>(t)->name << ": " << get<1>(t) << endl;
     // }

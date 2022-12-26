@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <unistd.h>
 using namespace std;
 
 // referencing: https://stackoverflow.com/questions/9158150/colored-output-in-c
@@ -227,6 +228,7 @@ int runSimulation(vector<vector<bool> > map, vector<SeaCucumber> seaCucumbers, i
         //     cout << "Simulation has taken " << moves << " moves" << endl;
         // }
         printBoard(map, seaCucumbers);
+        usleep(1000);
     }
 
     return moves;
@@ -253,7 +255,7 @@ void test_runSimulation() {
 
 
 int main() {
-    test_runSimulation();
+    // test_runSimulation();
     // I'm working in quadrant 4: positive x, negative y
     vector<string> values = getValuesFromFile("2021-25-input.txt");
 
@@ -269,7 +271,7 @@ int main() {
     cout << "Running simulation..." << endl;
 
     int moves = runSimulation(map, seaCucumbers, height, width);
-    cout << moves << endl;
+    // cout << moves << endl;
 
     return 0;
 }

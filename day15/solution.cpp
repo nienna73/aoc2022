@@ -7,8 +7,8 @@
 #include <unordered_set>
 
 
-#define LINE_OF_INTEREST 2000000
-// #define LINE_OF_INTEREST 10
+// #define LINE_OF_INTEREST 2000000
+#define LINE_OF_INTEREST 10
 #define BUFFER 1024
 #define ROW_SIZE 512
 
@@ -62,42 +62,30 @@ tuple<long, long> getYBounds(vector<string> values) {
     return make_tuple(maxY, minY);
 }
 
-int getManhattanDistance(long x1, long y1, long x2, long y2) {
-    int part1 = abs(x1-x2);
-    int part2 = abs(y1-y2);
+long getManhattanDistance(long x1, long y1, long x2, long y2) {
+    long part1 = abs(x1-x2);
+    long part2 = abs(y1-y2);
     return part1 + part2;
 }
 
 void updateRange(long sensorX, long sensorY, long beaconX, long beaconY, unordered_set<signed int> &xPosSeen, unordered_set<signed int> beacons) {
-    int distance = getManhattanDistance(sensorX, sensorY, beaconX, beaconY);
+    long distance = getManhattanDistance(sensorX, sensorY, beaconX, beaconY);
     cout << "Distance to beacon: " << distance << endl;
-    int distanceToTarget = getManhattanDistance(sensorX, sensorY, sensorX, LINE_OF_INTEREST);
+    long distanceToTarget = getManhattanDistance(sensorX, sensorY, sensorX, LINE_OF_INTEREST);
     cout << "Distance to line: " << distanceToTarget << endl;
-    if (distanceToTarget > distance) {
-        return;
-    }
+    // if (distanceToTarget > distance) {
+    //     return;
+    // }
     // we're going to pass through the line of interest at some point
     // what will the xCoord be when we do so?
-    int spreadOfX = distance - distanceToTarget;
-
-    signed int index = sensorX;
-    if (beacons.find(index) == beacons.end()) {
-        xPosSeen.insert(index);
+    long spreadOfX = distance - distanceToTarget;
+    if (spreadOfX < 0 ) {
+        return;
     }
     
-    for (int i = 1; i <= spreadOfX; i++ ) {
-        if (i == floor(spreadOfX / 2)) {
-            cout << "passed halfway point" << endl;
-        }
-        index = sensorX + i;
-        if (beacons.find(index) == beacons.end()) {
-            xPosSeen.insert(index);
-        }
-
-        index = sensorX - i;
-        if (beacons.find(index) == beacons.end()) {
-            xPosSeen.insert(index);
-        }
+    for (long i = spreadOfX * -1; i <= spreadOfX; i++ ) {
+        long index = sensorX + i;
+        xPosSeen.insert(index);
 
     }
     cout << "finished update" << endl;
@@ -114,9 +102,10 @@ vector<vector<char> > initializeMap(vector<string> values, tuple<long, long> xBo
 
     long doesNotExist = string::npos;
 
-    vector<vector<char>> vec(ceil(xCoordMax/ROW_SIZE) + BUFFER, vector<char> (ROW_SIZE, '.'));
+    vector<vector<char>> vec(ceil(xCoordMax/ROW_SIZE), vector<char> (ROW_SIZE, '.'));
     unordered_set<signed int> xPosSeen;
     unordered_set<signed int> beaconPos;
+
     for (string value : values) {
         vector<string> split = splitString(value, ':');
         string beacon = split[1];
@@ -157,6 +146,7 @@ vector<vector<char> > initializeMap(vector<string> values, tuple<long, long> xBo
 
     }
     cout << endl;
+    cout << beaconPos.size() << endl;
     cout << xPosSeen.size() - beaconPos.size() << endl;
     return vec;
 }
@@ -184,6 +174,7 @@ int main() {
     // 202 is too low
     // 5235789 is too high
     // 5779274
+    // 5933076
 
     return 0;
 }
