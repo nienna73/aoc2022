@@ -85,5 +85,6 @@ if __name__ == "__main__":
         toAdd = {}
         index += 1
 
-    with open("../vis/visualisation/src/files/day8.json", "w+") as f:
-        json.dump(obj, f, indent=4)
+    with open("../vis/visualisation/src/files/day8.txt", "w+") as f:
+        for line in lines:
+            f.write(str(list(line)))
